@@ -59,7 +59,7 @@ def validate_dataset(path, expected_shape=None, n_examples=3):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python validate_dataset.py /path/to/mel_specs [expected_height expected_width]")
+        print("data signature: python validate_dataset.py /path/to/mel_specs [expected_height expected_width]")
         sys.exit(1)
 
     spec_dir = sys.argv[1]
