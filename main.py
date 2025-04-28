@@ -6,6 +6,9 @@ import sys
 import matplotlib.pyplot as plt
 import librosa.display
 import os
+import tensorflow as tf
+import cnn
+import only_cnn
 
 
 # # 1a) Load and resample
@@ -123,13 +126,72 @@ def preprocess_dataset(input_dir, output_dir):
 
 # main.py
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python main.py /path/to/genres_original /path/to/output_folder")
+    spectogram_shape = (96,1293,1)
+    tabular_shape = ???
+    num_classes = 8
+    
+    if len(sys.argv) < 3:
+        print("Usage: python main.py /path/to/genres_original /path/to/output_folder [--spectogram-only]")
         sys.exit(1)
-    input_dir  = sys.argv[1]
+        
+    input_dir = sys.argv[1]
     output_dir = sys.argv[2]
+    
+    # Check if we should use spectogram-only model
+    use_spectogram_only = len(sys.argv) > 3 and sys.argv[3] == "--spectogram-only"
+    
     preprocess_dataset(input_dir, output_dir)
     print("PREPROCESSED ALL FILES")
+
+    (X_spec_train, X_tab_train, y_train), (X_spec_val, X_tab_val, y_val) = load_data() # insert preprocessed data
+    
+    # Choose the appropriate model based on the flag
+    if use_spectogram_only:
+        print("Using spectogram-only model")
+        model = only_cnn.build_full_model(spectogram_shape, num_classes)
+        
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.005),
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        model.fit(
+            X_spec_train,
+            y_train,
+            validation_data=(X_spec_val, y_val),
+            epochs=30,
+            batch_size=32,
+            callbacks=[
+                tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+            ]
+        )
+    else:
+        print("Using combined spectrogram and tabular model")
+        tabular_shape = (X_tab_train.shape[1],)  # Determine shape from actual data
+        model = cnn.build_full_model(spectogram_shape, tabular_shape, num_classes)
+        
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.005),
+            loss='categorical_crossentropy',
+            metrics=['accuracy']
+        )
+        
+        model.fit(
+            [X_spec_train, X_tab_train],
+            y_train,
+            validation_data=([X_spec_val, X_tab_val], y_val),
+            epochs=30,
+            batch_size=32,
+            callbacks=[
+                tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+            ]
+        )
+
+    model.save('models/genre_classifier.h5')
+    print("Model saved to models/genre_classifier.h5")
+
+
 
 if __name__ == "__main__":
     main()
