@@ -143,7 +143,7 @@ def main():
     preprocess_dataset(input_dir, output_dir)
     print("PREPROCESSED ALL FILES")
 
-    (X_spec_train, X_tab_train, y_train), (X_spec_val, X_tab_val, y_val) = load_data() # insert preprocessed data
+    (X_spec_train, X_tab_train, y_train), (X_spec_val, X_tab_val, y_val) = load_data(output_dir) # insert preprocessed data
     
     # Choose the appropriate model based on the flag
     if use_spectogram_only:
