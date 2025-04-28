@@ -33,18 +33,29 @@ def spectogram_calc(input_shape, num_genres):
 
 
 def build_full_model(spectogram_shape, num_genres):
-
-    # tabular input from metadata
-    # spectograms = utils.load("INSERT FILE PATH FROM PREPROCESSING")
-    # tracks = utils.load("data/fma_metadata/tracks.csv")
-
-    spectogram_model = spectogram_calc(spectogram_shape, num_genres)
-
+    """
+    Build a model that takes spectogram input and outputs genre predictions
+    
+    Args:
+        spectogram_shape: Shape of the input spectrograms (height, width, channels)
+        num_genres: Number of genre classes to predict
+        
+    Returns:
+        A compiled Keras model
+    """
+    # Create input layer
     spectogram_input = tf.keras.Input(shape=spectogram_shape)
-
+    
+    # Get the spectogram model
+    spectogram_model = spectogram_calc(spectogram_shape, num_genres)
+    
+    # Apply the model to the input
     spectogram_output = spectogram_model(spectogram_input)
-
-    return spectogram_output
+    
+    # Create and return a proper model
+    model = tf.keras.Model(inputs=spectogram_input, outputs=spectogram_output)
+    
+    return model
 
 
 
