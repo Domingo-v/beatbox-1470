@@ -11,6 +11,9 @@ import cnn
 import only_cnn
 
 from sklearn.model_selection import train_test_split
+from lime import lime_image
+import matplotlib.pyplot as plt
+from skimage.segmentation import mark_boundaries
 
 # # 1a) Load and resample
 # y, sr = librosa.load(path, sr=22050)      # downsample to 22 050 Hz
@@ -181,7 +184,6 @@ def load_data(processed_data_dir):
     X_spec_train, X_spec_temp, y_train, y_temp = train_test_split(
         X_spec, y_onehot, test_size=0.2, random_state=42, stratify=y
     )
-    print(y_temp)
     # Then split the temp data into test and validation (50% each, which is 10% of original data)
     X_spec_val, X_spec_test, y_val, y_test = train_test_split(
         X_spec_temp, y_temp, test_size=0.5, random_state=42
@@ -240,7 +242,7 @@ def main():
             X_spec_train,
             y_train,
             validation_data=(X_spec_val, y_val),
-            epochs=5,
+            epochs=50,
             batch_size=32,
             callbacks=[
                 tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
@@ -265,7 +267,7 @@ def main():
             [X_spec_train, X_tab_train],
             y_train,
             validation_data=([X_spec_val, X_tab_val], y_val),
-            epochs=30,
+            epochs=50,
             batch_size=32,
             callbacks=[
                 tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
@@ -278,8 +280,125 @@ def main():
 
     # Save the model
     os.makedirs('models', exist_ok=True)
-    model.save('models/genre_classifier.h5')
-    print("Model saved to models/genre_classifier.h5")
+    # Option 1: Save in the newer, more efficient Keras format
+    model.save('models/genre_classifier.keras')
+    print("Model saved to models/genre_classifier.keras")
+
+    # Adding LIME Explainer for Model Interpretation
+    def explain_prediction_with_lime(model, X_test, y_test, class_names, sample_idx=0):
+        """
+        Explains a model prediction using LIME
+        
+        Args:
+            model: Trained Keras model
+            X_test: Test data
+            y_test: Test labels (one-hot encoded)
+            class_names: List of class names
+            sample_idx: Index of the sample to explain
+        """
+  
+        
+        # Get a sample to explain
+        sample = X_test[sample_idx]
+        true_class = np.argmax(y_test[sample_idx])
+        
+        # Get the prediction for this sample
+        pred = model.predict(sample[np.newaxis, ...])
+        pred_class = np.argmax(pred[0])
+        
+        print(f"Explaining prediction for sample {sample_idx}")
+        print(f"True class: {class_names[true_class]}")
+        print(f"Predicted class: {class_names[pred_class]} (confidence: {pred[0][pred_class]:.4f})")
+        
+        # Create a custom segmentation function for spectrograms
+        def spectrogram_segmentation(image):
+            """
+            Creates segments for a spectrogram image using a grid-based approach
+            Returns a 2D array of segment labels
+            """
+            segments = np.zeros(image.shape[:2], dtype=np.int32)
+            
+            # Create a grid-based segmentation (10x10 grid = 100 segments)
+            height, width = segments.shape
+            h_step = height // 10
+            w_step = width // 20
+            
+            segment_id = 1
+            for i in range(0, height, h_step):
+                for j in range(0, width, w_step):
+                    segments[i:min(i+h_step, height), j:min(j+w_step, width)] = segment_id
+                    segment_id += 1
+            
+            return segments
+        
+        # Create the LIME explainer
+        explainer = lime_image.LimeImageExplainer(verbose=False)
+        
+        # Function to get model predictions for perturbed images
+        def model_predict_fn(images):
+            return model.predict(images)
+        
+        # Ensure the sample has the right shape and type for LIME
+        lime_sample = sample.copy()
+        
+        # Generate the explanation with the custom segmentation function
+        explanation = explainer.explain_instance(
+            lime_sample.astype('double'), 
+            model_predict_fn,
+            top_labels=5, 
+            hide_color=0, 
+            num_samples=1000,
+            segmentation_fn=spectrogram_segmentation
+        )
+        
+        # Get the original spectrogram
+        spectrogram = sample[:, :, 0]  # Remove channel dimension
+        
+        # Generate explanation for the top predicted class
+        temp, mask = explanation.get_image_and_mask(
+            pred_class,
+            positive_only=True, 
+            num_features=10, 
+            hide_rest=False
+        )
+        
+        # Display the explanation
+        plt.figure(figsize=(12, 6))
+        
+        # Plot the original spectrogram
+        plt.subplot(1, 2, 1)
+        plt.imshow(spectrogram, cmap='viridis')
+        plt.title(f'Original Spectrogram\nTrue: {class_names[true_class]}')
+        plt.colorbar(format='%+2.0f dB')
+        
+        # Plot the explanation
+        plt.subplot(1, 2, 2)
+        plt.imshow(mark_boundaries(temp[:, :, 0], mask), cmap='viridis')
+        plt.title(f'Explanation for {class_names[pred_class]}\nConfidence: {pred[0][pred_class]:.2f}')
+        plt.colorbar(format='%+2.0f dB')
+        
+        plt.tight_layout()
+        
+        # Save the figure
+        plt.savefig(f'lime_explanation_sample{sample_idx}_{class_names[true_class]}_as_{class_names[pred_class]}.png', 
+                    dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        return explanation
+
+    # Get class names from the genre folders
+    genres = sorted(os.listdir(output_dir))
+    genres = [g for g in genres if os.path.isdir(os.path.join(output_dir, g))]
+    
+    # Explain a few predictions using LIME
+    print("\nGenerating LIME explanations...")
+    
+    # Explain 3 random samples from the test set
+    import random
+    for i in range(3):
+        random_idx = random.randint(0, len(X_spec_test) - 1)
+        explain_prediction_with_lime(model, X_spec_test, y_test, genres, sample_idx=random_idx)
+
 
 
 

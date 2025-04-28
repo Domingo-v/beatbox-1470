@@ -14,18 +14,38 @@ def spectogram_calc(input_shape, num_genres):
     # spectogram model to handle visual data
     spectogram_model = tf.keras.Sequential([
         tf.keras.layers.Input(shape=input_shape),
-        tf.keras.layers.Conv2D(32, kernel_size=(3,3), activation='relu'),
+        
+        # First conv block
+        tf.keras.layers.Conv2D(32, kernel_size=(3,3), activation='leaky_relu', padding='same',
+                              kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Conv2D(32, kernel_size=(3,3), activation='leaky_relu', padding='same'),
         tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
         tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Conv2D(64, kernel_size=(3,3), activation='relu'),
+        tf.keras.layers.SpatialDropout2D(0.1),
+        
+        # Second conv block
+        tf.keras.layers.Conv2D(64, kernel_size=(3,3), activation='leaky_relu', padding='same',
+                              kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Conv2D(64, kernel_size=(3,3), activation='leaky_relu', padding='same'),
         tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
         tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Conv2D(128, kernel_size=(3,3), activation='relu'),
+        tf.keras.layers.SpatialDropout2D(0.2),
+
+        #Third conv block
+         tf.keras.layers.Conv2D(128, kernel_size=(3,3), activation='leaky_relu', padding='same',
+                              kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Conv2D(128, kernel_size=(3,3), activation='leaky_relu', padding='same'),
         tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
         tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.SpatialDropout2D(0.3),
+
+
+        #Dense layers
         tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Dense(256, activation='leaky_relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Dropout(0.4),
+        tf.keras.layers.Dense(128, activation='leaky_relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)),
+        tf.keras.layers.Dropout(0.4),
         tf.keras.layers.Dense(num_genres, activation='softmax')
     ])
     # spectogram_output = spectogram_model(spectogram_data)
