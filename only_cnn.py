@@ -17,7 +17,7 @@ def spectogram_calc(input_shape, num_genres):
         tf.keras.layers.Conv2D(32, kernel_size=(3,3), activation='relu'),
         tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
         tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.Conv2D(a64, kernel_size=(3,3), activation='relu'),
+        tf.keras.layers.Conv2D(64, kernel_size=(3,3), activation='relu'),
         tf.keras.layers.MaxPooling2D(pool_size=(2,2)),
         tf.keras.layers.BatchNormalization(),
         tf.keras.layers.Conv2D(128, kernel_size=(3,3), activation='relu'),
@@ -32,7 +32,7 @@ def spectogram_calc(input_shape, num_genres):
     return spectogram_model
 
 
-def build_full_model(spectogram_shape, tabular_shape, num_genres):
+def build_full_model(spectogram_shape, num_genres):
 
     # tabular input from metadata
     # spectograms = utils.load("INSERT FILE PATH FROM PREPROCESSING")
