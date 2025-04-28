@@ -231,7 +231,7 @@ def main():
         model = only_cnn.build_full_model(spectogram_shape, num_classes)
         
         model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.005),
+            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
             loss='categorical_crossentropy',
             metrics=['accuracy']
         )
@@ -243,7 +243,7 @@ def main():
             epochs=50,
             batch_size=32,
             callbacks=[
-                tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+                tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
             ]
         )
         
