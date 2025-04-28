@@ -135,27 +135,33 @@ def preprocess_dataset(input_dir, metadata_csv, output_dir):
     # load
     # df = pd.read_csv(metadata_csv, index_col=0, low_memory=False) #was getting weird errors so running on low memory bc tracks is huge
     
-    df = utils.load(metadata_csv)
-    ipd.display(df['track'].head())
+    # df = utils.load(metadata_csv)
+    # ipd.display(df['track'].head())
 
-    # troubleshooting
-    print("[DEBUG] DataFrame columns:", df.columns.tolist())
-    print("[DEBUG] First 10 rows of metadata:")
-    print(df.head(10))
+    # # troubleshooting
+    # print("[DEBUG] DataFrame columns:", df.columns.tolist())
+    # print("[DEBUG] First 10 rows of metadata:")
+    # print(df.head(10))
 
 
 
-    df2=df['track']
-    print("[DEBUG] DataFrame columns:", df2.columns.tolist())
-    print(df2.head(10))
+    # df2=df['track']
+    # print("[DEBUG] DataFrame columns:", df2.columns.tolist())
+    # print(df2.head(10))
 
 
 
     
 
-    newdf= df2['track_id','genre_top'].iloc[3:]
-    print("[DEBUG] DataFrame columns:", newdf.columns.tolist())
-    print(newdf.head(10))
+    # newdf= df2['track_id','genre_top'].iloc[3:]
+    # print("[DEBUG] DataFrame columns:", newdf.columns.tolist())
+    # print(newdf.head(10))
+
+    df = utils.load(metadata_csv)
+    # if tracks DataFrame has MultiIndex columns, extract the 'track' level
+    if isinstance(df.columns, pd.MultiIndex) and 'track' in df.columns.levels[0]:
+        df = df['track']
+
 
 
     
@@ -164,7 +170,7 @@ def preprocess_dataset(input_dir, metadata_csv, output_dir):
     
     if('genre_top' not in df.columns):
         raise ValueError("must have 'genre_top' col")
-    genre_map = df2['genre_top'].astype(str).to_dict()  # CHANGED
+    genre_map = df['genre_top'].astype(str).to_dict()  # CHANGED
 
     # audio file folder
     for root, _, files in os.walk(input_dir):
