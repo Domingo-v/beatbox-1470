@@ -1,11 +1,20 @@
-import librosa
+import os
+
+import IPython.display as ipd
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+# import seaborn as sns
+import sklearn as skl
+import sklearn.utils, sklearn.preprocessing, sklearn.decomposition, sklearn.svm
+import librosa
+import librosa.display
+
 import utils
 
+
+
 import sys
-# import matplotlib.pyplot as plt
-import os
 
 
 # # 1a) Load and resample
@@ -124,17 +133,38 @@ def preprocess_dataset(input_dir, metadata_csv, output_dir):
         #NOTE NEW FMA CENTERED .MP3 IMPLEMENTATION
 
     # load
-    df = pd.read_csv(metadata_csv, index_col=0, low_memory=False) #was getting weird errors so running on low memory bc tracks is huge
+    # df = pd.read_csv(metadata_csv, index_col=0, low_memory=False) #was getting weird errors so running on low memory bc tracks is huge
+    
+    df = utils.load(metadata_csv)
+    ipd.display(df['track'].head())
 
     # troubleshooting
     print("[DEBUG] DataFrame columns:", df.columns.tolist())
     print("[DEBUG] First 10 rows of metadata:")
     print(df.head(10))
 
+
+
+    df2=df['track']
+    print("[DEBUG] DataFrame columns:", df2.columns.tolist())
+    print(df2.head(10))
+
+
+
+    
+
+    newdf= df2['track_id','genre_top'].iloc[3:]
+    print("[DEBUG] DataFrame columns:", newdf.columns.tolist())
+    print(newdf.head(10))
+
+
+    
+
+
     
     if('genre_top' not in df.columns):
         raise ValueError("must have 'genre_top' col")
-    genre_map = df['genre_top'].astype(str).to_dict()  # CHANGED
+    genre_map = df2['genre_top'].astype(str).to_dict()  # CHANGED
 
     # audio file folder
     for root, _, files in os.walk(input_dir):
