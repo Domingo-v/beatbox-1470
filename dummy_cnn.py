@@ -49,17 +49,17 @@ class DummyCNN(nn.Module):
             nn.ReLU(),
             nn.Conv2d(8, 16, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.AdaptiveAvgPool2d((1,1)),  # collapse H×W→1×1
+            nn.AdaptiveAvgPool2d((1,1)),
         )
         self.classifier = nn.Linear(16, num_classes)
 
     def forward(self, x):
-        x = self.features(x)            # → (batch,16,1,1)
-        x = x.view(x.size(0), -1)       # → (batch,16)
-        return self.classifier(x)       # → (batch,num_classes)
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
+        return self.classifier(x)
 
 def main():
-    DATA_ROOT = "processed_data"      # point this at your npy folder
+    DATA_ROOT = "processed_data" 
     BATCH_SIZE = 16
 
     dataset = NumpySpectrogramDataset(DATA_ROOT)
