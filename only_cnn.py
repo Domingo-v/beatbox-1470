@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 
-def spectogram_calc(input_shape):
+def spectogram_calc(input_shape, num_genres):
     # Load in spectogram data
 
     # spectogram model to handle visual data
@@ -26,6 +26,7 @@ def spectogram_calc(input_shape):
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(128, activation='relu'),
         tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Dense(num_genres, activation='softmax')
     ])
     # spectogram_output = spectogram_model(spectogram_data)
     return spectogram_model
@@ -37,7 +38,7 @@ def build_full_model(spectogram_shape, tabular_shape, num_genres):
     # spectograms = utils.load("INSERT FILE PATH FROM PREPROCESSING")
     # tracks = utils.load("data/fma_metadata/tracks.csv")
 
-    spectogram_model = spectogram_calc(spectogram_shape)
+    spectogram_model = spectogram_calc(spectogram_shape, num_genres)
 
     spectogram_input = tf.keras.Input(shape=spectogram_shape)
 

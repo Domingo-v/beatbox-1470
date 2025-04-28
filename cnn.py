@@ -81,5 +81,14 @@ def build_full_model(spectogram_shape, tabular_shape, num_genres):
     model = tf.keras.Model(inputs=[spectogram_input, tabular_input], outputs=final_output)
     return model
 
+def build_spectogram_model(spectogram_shape, num_genres):
+    spectogram_model = spectogram_calc(spectogram_shape)
+    spectogram_input = tf.keras.Input(shape=spectogram_shape)
+    spectogram_output = spectogram_model(spectogram_input)
+    final_model = final_calc(num_genres)
+    final_output = final_model(spectogram_output)
+    model = tf.keras.Model(inputs=[spectogram_input], outputs=final_output)
+    return model
+
 
 

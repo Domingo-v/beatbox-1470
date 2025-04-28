@@ -8,6 +8,7 @@ import librosa.display
 import os
 import tensorflow as tf
 import cnn
+import only_cnn
 
 
 # # 1a) Load and resample
@@ -138,6 +139,7 @@ def main():
 
     (X_spec_train, X_tab_train, y_train), (X_spec_val, X_tab_val, y_val) = load_data() # insert preprocessed data
     model = cnn.build_full_model(spectogram_shape, tabular_shape, num_classes)
+    partial_model = only_cnn.build_full_model(spectogram_shape, num_classes)
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.005),
