@@ -2,3 +2,6 @@ data/
 processed_data/
 best_model/
 models1-cnn/
+LIME_pics/
+__pycache__
+models/

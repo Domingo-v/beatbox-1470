@@ -46,9 +46,9 @@ def tabular_calc(input_shape):
 def final_calc(num_genres):
     # final few layers to run concatenated outputs through, end w softmax
     final_model = tf.keras.Sequential([
-        tf.keras.Dense(64, activation='relu'),
-        tf.keras.Dropout(0.3),
-        tf.keras.Dense(num_genres, activation='softmax')
+        tf.keras.layers.Dense(64, activation='relu'),
+        tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Dense(num_genres, activation='softmax')
     ])
     return final_model
 
