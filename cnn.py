@@ -43,10 +43,12 @@ def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
     x = tf.keras.layers.MaxPooling2D((2,2))(x)
     # x = tf.keras.layers.SpatialDropout2D(0.3)(x)
 
+    channels = x.shape[-1]
+
     se = tf.keras.layers.GlobalAveragePooling2D()(x)
-    se = tf.keras.layers.Dense(x.shape[-1] // 16, activation='relu')(se)
-    se = tf.keras.layers.Dense(x.shape[-1], activation='sigmoid')(se)
-    se = tf.keras.layers.Reshape((1, 1, x.shape[-1]))(se)
+    se = tf.keras.layers.Dense(channels // 16, activation='relu')(se)
+    se = tf.keras.layers.Dense(channels, activation='sigmoid')(se)
+    se = tf.keras.layers.Reshape((1, 1, channels))(se)
     x = tf.keras.layers.Multiply()([x, se])
 
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
@@ -58,9 +60,8 @@ def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
 
     x = tf.keras.layers.Dense(128, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
     x = tf.keras.layers.LeakyReLU()(x)
-    x = tf.keras.layers.Dropout(0.3)(x)
+    outputs = tf.keras.layers.Dropout(0.3)(x)
 
-    outputs = tf.keras.layers.Dense(num_genres, activation='softmax')(x)
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
     return model
@@ -218,7 +219,7 @@ def build_full_model(spectogram_shape, tabular_shape, num_genres):
     return model
 
 def build_spectogram_model(spectogram_shape, num_genres):
-    spectogram_model = spectogram_calc(spectogram_shape)
+    spectogram_model = spectogram_calc(spectogram_shape, num_genres)
     spectogram_input = tf.keras.Input(shape=spectogram_shape)
     spectogram_output = spectogram_model(spectogram_input)
     final_model = final_calc(num_genres)
