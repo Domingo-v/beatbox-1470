@@ -43,7 +43,7 @@ def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
     inputs = tf.keras.layers.Input(shape=input_shape)
 
 
-    x = tf.keras.layers.Conv2D(32, (3,3), padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
+    x = tf.keras.layers.Conv2D(32, (3,3), padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(inputs)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
     x = tf.keras.layers.MaxPooling2D((2,2))(x)
