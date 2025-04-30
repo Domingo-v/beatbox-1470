@@ -52,7 +52,7 @@ def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
 
     x = tf.keras.layers.Dense(256, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-    x = tf.keras.BatchNormalization()(x)
+    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.LeakyReLU()(x)
     x = tf.keras.layers.Dropout(0.5)(x)
 
