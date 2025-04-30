@@ -7,9 +7,8 @@ from skimage.segmentation import mark_boundaries
 import random
 import sys
 
-# Disable operation fusion (needed for M1/M2 Macs)
-tf.config.optimizer.set_jit(False)  # Disable XLA
-os.environ['TF_DISABLE_FUSED_OPS'] = '1'  # Disable fused operations
+tf.config.optimizer.set_jit(False)  
+os.environ['TF_DISABLE_FUSED_OPS'] = '1'  
 
 def load_test_data(processed_data_dir):
     """Load only the test data portion"""
@@ -142,7 +141,7 @@ def explain_prediction_with_lime(model, X_test, y_test, class_names, sample_idx=
     explainer = lime_image.LimeImageExplainer(verbose=False)
     
     # Generate the explanation
-    print("Generating LIME explanation... (this might take a minute)")
+    print("Generating")
     explanation = explainer.explain_instance(
         spectrogram_2d, 
         predict_fn,
@@ -221,7 +220,6 @@ def main():
     # Generate LIME explanations
     print(f"\nGenerating {num_explanations} LIME explanations...")
     
-    # Instead of random samples, try with a few fixed indices first to debug
     sample_indices = [0, 10, 20]  # Start with known indices
     
     for i in range(min(num_explanations, len(sample_indices))):
