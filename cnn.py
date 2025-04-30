@@ -30,15 +30,6 @@ def conv_block(x, filters, kernel_size, lambda_reg, dropout_rate, use_residual=F
     x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
     return x
 
-def squeeze_excitation_block(x, ratio=16):
-    filters = x.shape[-1]
-    se = tf.keras.layers.GlobalAveragePooling2D()(x)
-    se = tf.keras.layers.Dense(filters // ratio)(se)
-    se = tf.keras.layers.LeakyReLU(alpha=0.1)(se)
-    se = tf.keras.layers.Dense(filters, activation='sigmoid')(se)
-    se = tf.keras.layers.Reshape((1, 1, filters))(se)
-    return tf.keras.layers.Multiply()([x, se])
-
 def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
     # Load in spectogram data
     # Input layer
