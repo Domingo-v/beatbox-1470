@@ -32,7 +32,7 @@ def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
     inputs = tf.keras.layers.Input(shape=input_shape)
 
 
-    x = residual_conv_block(x, 32, dropout_rate=0.1)
+    x = residual_conv_block(inputs, 32, dropout_rate=0.1)
     x = tf.keras.layers.MaxPooling2D((2,2))(x)
 
     x = residual_conv_block(x, 64, dropout_rate=0.2)
