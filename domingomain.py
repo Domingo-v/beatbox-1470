@@ -11,10 +11,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import utils
 
-from_path = 'data/fma_processed'
+from_path = 'output_dir'
 csv_path = 'data/fma/fma_metadata/echonest.csv'
 
-def load_data(test_size=0.2, from_path='data/fma_processed', csv_path='data/fma/fma_metadata/echonest.csv'):
+def load_data(test_size=0.2, from_path='data/output_dir', csv_path='data/fma/fma_metadata/echonest.csv'):
     """
     Returns: (X_spec_train, X_tab_train, y_train), (X_spec_val,   X_tab_val,   y_val)
     Shapes:
