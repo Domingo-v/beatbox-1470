@@ -231,7 +231,7 @@ def main():
         print("Using combined spectrogram and tabular model")
         (X_spec_train, X_tab_train, y_train), (X_spec_val, X_tab_val, y_val), (X_spec_test, X_tab_test, y_test) = load_data(processed_data_dir=processed_path,from_path=processed_path,csv_path=tabular_path)
         tabular_shape = (X_tab_train.shape[1],)  # Determine shape from actual data
-        model = cnn.build_full_model(spectogram_shape, tabular_shape, num_classes)
+        model = only_cnn.build_full_model(spectogram_shape, tabular_shape, num_classes)
         
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=0.005),
@@ -246,7 +246,7 @@ def main():
             epochs=30,
             batch_size=32,
             callbacks=[
-                tf.keras.callbacks.EarlyStopping(restore_best_weights=True)
+                tf.keras.callbacks.EarlyStopping(restore_best_weights=True, monitor='val_loss', patience=10)
                 # tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
             ]
         )

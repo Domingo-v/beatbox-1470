@@ -5,3 +5,5 @@ models1-cnn/
 LIME_pics/
 __pycache__
 models/
+.DS_Store
+output_dir/
