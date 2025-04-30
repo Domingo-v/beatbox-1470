@@ -8,66 +8,56 @@ from sklearn.model_selection import train_test_split
 
 import tensorflow as tf
 
-# def conv_block(x, filters, kernel_size, lambda_reg, dropout_rate, use_residual=False):
-#     shortcut = x  # for residual connection
-#     x = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, padding='same',
-#                                kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-#     x = tf.keras.layers.BatchNormalization()(x)
-#     x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
-#     x = tf.keras.layers.Conv2D(filters, kernel_size=kernel_size, padding='same',
-#                                kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-#     x = tf.keras.layers.BatchNormalization()(x)
-    
-#     if use_residual:
-#         if shortcut.shape[-1] != x.shape[-1]:
-#             shortcut = tf.keras.layers.Conv2D(filters, kernel_size=(1, 1), padding='same')(shortcut)
-#         x = tf.keras.layers.Add()([x, shortcut])
-    
-#     x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
-    
-#     x = tf.keras.layers.SpatialDropout2D(dropout_rate)(x)
-    
-#     x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
-#     return x
+def residual_conv_block(x, filters, kernel_size=(3,3), dropout_rate=0.2, lambda_reg=0.01):
+    shortcut=x
+    x = tf.keras.layers.Conv2D(filters, kernel_size, padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.LeakyReLU()(x)
+
+    x = tf.keras.layers.Conv2D(filters, kernel_size, padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+
+    if shortcut.shape[-1] != x.shape[-1]:
+        shortcut = tf.keras.layers.Conv2D(filters, (1, 1), padding='same')(shortcut)
+    x = tf.keras.layers.Add()([x, shortcut])
+    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.SpatialDropout2D(dropout_rate)(x)
+    return x
 
 def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
     # Load in spectogram data
-
-
-
-
-
 
 
     # Input layer
     inputs = tf.keras.layers.Input(shape=input_shape)
 
 
-    x = tf.keras.layers.Conv2D(32, (3,3), padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(inputs)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
+    x = residual_conv_block(x, 32, dropout_rate=0.1)
     x = tf.keras.layers.MaxPooling2D((2,2))(x)
 
-    x = tf.keras.layers.Conv2D(64, (3,3), padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
+    x = residual_conv_block(x, 64, dropout_rate=0.2)
     x = tf.keras.layers.MaxPooling2D((2,2))(x)
-    x = tf.keras.layers.SpatialDropout2D(0.2)(x)
+    # x = tf.keras.layers.SpatialDropout2D(0.2)(x)
 
-    x = tf.keras.layers.Conv2D(128, (3,3), padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
+    x = residual_conv_block(x, 128, dropout_rate=0.3)
     x = tf.keras.layers.MaxPooling2D((2,2))(x)
-    x = tf.keras.layers.SpatialDropout2D(0.3)(x)
+    # x = tf.keras.layers.SpatialDropout2D(0.3)(x)
+
+    se = tf.keras.layers.GlobalAveragePooling2D()(x)
+    se = tf.keras.layers.Dense(x.shape[-1] // 16, activation='relu')(se)
+    se = tf.keras.layers.Dense(x.shape[-1], activation='sigmoid')(se)
+    se = tf.keras.layers.Reshape((1, 1, x.shape[-1]))(se)
+    x = tf.keras.layers.Multiply()([x, se])
 
     x = tf.keras.layers.GlobalAveragePooling2D()(x)
 
-    x = tf.keras.layers.Dense(128, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
+    x = tf.keras.layers.Dense(256, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
+    x = tf.keras.BatchNormalization()(x)
+    x = tf.keras.layers.LeakyReLU()(x)
     x = tf.keras.layers.Dropout(0.5)(x)
 
-    x = tf.keras.layers.Dense(64, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-    x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
+    x = tf.keras.layers.Dense(128, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
+    x = tf.keras.layers.LeakyReLU()(x)
     x = tf.keras.layers.Dropout(0.3)(x)
 
     outputs = tf.keras.layers.Dense(num_genres, activation='softmax')(x)
