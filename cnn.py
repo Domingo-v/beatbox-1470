@@ -12,7 +12,7 @@ def residual_conv_block(x, filters, kernel_size=(3,3), dropout_rate=0.2, lambda_
     shortcut=x
     x = tf.keras.layers.Conv2D(filters, kernel_size, padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.LeakyReLU(0.1)(x)
 
     x = tf.keras.layers.Conv2D(filters, kernel_size, padding='same', kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
     x = tf.keras.layers.BatchNormalization()(x)
@@ -20,11 +20,11 @@ def residual_conv_block(x, filters, kernel_size=(3,3), dropout_rate=0.2, lambda_
     if shortcut.shape[-1] != x.shape[-1]:
         shortcut = tf.keras.layers.Conv2D(filters, (1, 1), padding='same')(shortcut)
     x = tf.keras.layers.Add()([x, shortcut])
-    x = tf.keras.layers.LeakyReLU()(x)
+    x = tf.keras.layers.LeakyReLU(0.1)(x)
     x = tf.keras.layers.SpatialDropout2D(dropout_rate)(x)
     return x
 
-def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
+def spectogram_calc(input_shape, lambda_reg=0.02):
     # Load in spectogram data
 
 
@@ -55,12 +55,12 @@ def spectogram_calc(input_shape, num_genres, lambda_reg=0.02):
 
     x = tf.keras.layers.Dense(256, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
     x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.LeakyReLU()(x)
-    x = tf.keras.layers.Dropout(0.5)(x)
+    x = tf.keras.layers.LeakyReLU(0.1)(x)
+    x = tf.keras.layers.Dropout(0.1)(x)
 
     x = tf.keras.layers.Dense(128, kernel_regularizer=tf.keras.regularizers.l2(lambda_reg))(x)
-    x = tf.keras.layers.LeakyReLU()(x)
-    outputs = tf.keras.layers.Dropout(0.3)(x)
+    x = tf.keras.layers.LeakyReLU(0.1)(x)
+    outputs = tf.keras.layers.Dropout(0.5)(x)
 
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
@@ -165,8 +165,7 @@ def tabular_calc(input_shape):
     x = tf.keras.layers.Dense(64, activation='relu')(inputs)
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dropout(0.3)(x)
-    x = tf.keras.layers.Dense(32, activation='relu')(x)
-    outputs = tf.keras.layers.Dense(16, activation='relu')(x)
+    outputs = tf.keras.layers.Dense(32, activation='relu')(x)
     return tf.keras.Model(inputs=inputs, outputs=outputs)
 
     # # model to handle tabular data
@@ -197,7 +196,7 @@ def build_full_model(spectogram_shape, tabular_shape, num_genres):
     # tracks = utils.load("data/fma_metadata/tracks.csv")
 
     # run both inputs through model
-    spectogram_model = spectogram_calc(spectogram_shape, num_genres)
+    spectogram_model = spectogram_calc(spectogram_shape)
     # spectogram_output = spectogram_output(spectograms)
     tabular_model = tabular_calc(tabular_shape)
 
@@ -219,7 +218,7 @@ def build_full_model(spectogram_shape, tabular_shape, num_genres):
     return model
 
 def build_spectogram_model(spectogram_shape, num_genres):
-    spectogram_model = spectogram_calc(spectogram_shape, num_genres)
+    spectogram_model = spectogram_calc(spectogram_shape)
     spectogram_input = tf.keras.Input(shape=spectogram_shape)
     spectogram_output = spectogram_model(spectogram_input)
     final_model = final_calc(num_genres)
